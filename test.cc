@@ -31,10 +31,10 @@ SOFTWARE.
 #include <iostream>
 #include <rapidxml.hpp>
 
-bool test_step(std::size_t testno, rapidxml::xml_node<> * test) {
+bool test_step(std::size_t testno, rapidxml::xml_node<>::ptr test) {
 	using namespace Spiffing;
 	try {
-		std::ifstream label_file(test->first_attribute("label")->value());
+		std::ifstream label_file(std::string{test->first_attribute("label")->value()});
 		std::string label_str{std::istreambuf_iterator<char>(label_file), std::istreambuf_iterator<char>()};
 		std::unique_ptr<Label> label(new Label(label_str, Format::ANY));
 		std::string langTag;
@@ -58,7 +58,7 @@ bool test_step(std::size_t testno, rapidxml::xml_node<> * test) {
 			if (label_marking != test->first_attribute("encrypt-marking")->value()) throw std::runtime_error("Mismatching encrypt-label marking: " + label_marking);
 		}
 		if (test->first_attribute("clearance")) {
-			std::ifstream clearance_file(test->first_attribute("clearance")->value());
+			std::ifstream clearance_file(std::string{test->first_attribute("clearance")->value()});
 			std::string clearance_str{std::istreambuf_iterator<char>(clearance_file), std::istreambuf_iterator<char>()};
 			Clearance clearance(clearance_str, Format::ANY);
 			if(test->first_attribute("clearance-marking")) {
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 				try {
 					++testno;
 					auto spif = pol->first_attribute("spif");
-					std::ifstream spiffile{spif->value()};
+					std::ifstream spiffile{std::string{spif->value()}};
 					site.load(spiffile);
 					auto ex = pol->first_attribute("exception");
 					if (ex) throw std::runtime_error("Expected exception " + std::string(ex->value()));

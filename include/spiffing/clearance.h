@@ -55,11 +55,11 @@ namespace Spiffing {
 		}
 		void addCategory(std::shared_ptr<Category> const & cat);
 	private:
-		void parse_xml(std::string const &);
-        void parse_xml_debug(std::string const &);
-        void parse_xml_nato(std::string const &);
-		void parse_ber(std::string const &);
-		void parse_any(std::string const &);
+		void parse_xml(std::string_view const &);
+        void parse_xml_debug(std::string_view const &);
+        void parse_xml_nato(std::string_view const &);
+		void parse_ber(std::string_view const &);
+		void parse_any(std::string_view const &);
         void write_xml_debug(std::string &) const;
         void write_xml_nato(std::string &) const;
 		void write_ber(std::string &) const;

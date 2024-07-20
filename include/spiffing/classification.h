@@ -37,7 +37,7 @@ SOFTWARE.
 namespace Spiffing {
 	class Classification {
 	public:
-		Classification(lacv_t lacv, std::string const & name, unsigned long hierarchy, bool obsolete=false);
+		Classification(lacv_t lacv, std::string_view const & name, unsigned long hierarchy, bool obsolete=false);
 
 		lacv_t lacv() const {
 			return m_lacv;
@@ -47,32 +47,32 @@ namespace Spiffing {
 		}
 		void addRequiredCategory(std::unique_ptr<CategoryGroup> && reqCats);
 		void compile(Spif const &);
-		bool valid(Label const &) const;
+		[[nodiscard]] bool valid(Label const &) const;
 
-		bool hasMarkings() const {
+		[[nodiscard]] bool hasMarkings() const {
 			return m_markings != nullptr;
 		}
-		Markings const & markings() const {
+		[[nodiscard]] Markings const & markings() const {
 			return *m_markings;
 		}
 		Markings const & markings(std::unique_ptr<Markings> && m) {
 			m_markings = std::move(m);
 			return *m_markings;
 		}
-		std::string const & fgcolour() const {
+		[[nodiscard]] std::string const & fgcolour() const {
 			return m_fgcolour;
 		}
-		std::string const & fgcolour(std::string const & c) {
+		std::string const & fgcolour(std::string_view const & c) {
 			m_fgcolour = c;
 			return m_fgcolour;
 		}
 
 		void equivEncrypt(std::shared_ptr<EquivClassification> const & equiv);
 		void equivDecrypt(std::shared_ptr<EquivClassification> const & equiv);
-		std::unique_ptr<Label> encrypt(Label const &, std::string const &) const;
-		std::unique_ptr<Label> decrypt(Label const &) const;
+		[[nodiscard]] std::unique_ptr<Label> encrypt(Label const &, std::string_view const &) const;
+		// [[nodiscard]] std::unique_ptr<Label> decrypt(Label const &) const;
 
-		unsigned long hierarchy() const {
+		[[nodiscard]] unsigned long hierarchy() const {
 			return m_hierarchy;
 		}
 	private:

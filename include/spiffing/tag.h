@@ -36,7 +36,7 @@ SOFTWARE.
 namespace Spiffing {
     class Tag {
     public:
-        Tag(TagSet & tagSet, TagType tagType, InformativeEncoding t7enc, std::string const & name);
+        Tag(TagSet & tagSet, TagType tagType, InformativeEncoding t7enc, std::string_view const & name);
         std::string const & name() const {
           return m_name;
         }

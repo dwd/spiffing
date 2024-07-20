@@ -131,13 +131,9 @@ void Label::parse_xml(std::string const & label) {
 	xml_document<> doc;
 	doc.parse<parse_fastest>(const_cast<char *>(tmp.c_str()));
 	auto root = doc.first_node();
-	if (root->xmlns() == nullptr) {
-		throw label_error("XML Namespace of label is unknown");
-	}
-	std::string xmlns{root->xmlns(), root->xmlns_size()};
-	if (xmlns == "http://surevine.com/xmlns/spiffy") {
+	if (root->xmlns() == "http://surevine.com/xmlns/spiffy") {
 		parse_xml_debug(label);
-	} else if (xmlns == "urn:nato:stanag:4774:confidentialitymetadatalabel:1:0") {
+	} else if (root->xmlns() == "urn:nato:stanag:4774:confidentialitymetadatalabel:1:0") {
 		parse_xml_nato(label);
 	} else {
 		throw label_error("Namespace not found");
@@ -153,8 +149,7 @@ void Label::parse_xml_debug(std::string const & label) {
 	if (std::string("label") != root->name()) {
 		throw label_error("Not a label");
 	}
-	if (root->xmlns() == nullptr ||
-		std::string("http://surevine.com/xmlns/spiffy") != root->xmlns()) {
+	if (root->xmlns() != "http://surevine.com/xmlns/spiffy") {
 		throw label_error("XML Namespace of label is unknown");
 	}
 	// Get security policy.
@@ -172,7 +167,7 @@ void Label::parse_xml_debug(std::string const & label) {
 	if (securityClassification) {
 		auto lacvattr = securityClassification->first_attribute("lacv");
 		if (lacvattr) {
-			lacv_t lacv = std::stoull(lacvattr->value());
+			lacv_t lacv = Internal::str2num<lacv_t>(lacvattr->value());
 			m_class = m_policy->classificationLookup(lacv);
 		}
 	}
@@ -180,26 +175,24 @@ void Label::parse_xml_debug(std::string const & label) {
 	for (auto tag = root->first_node("tag"); tag; tag = tag->next_sibling("tag")) {
 		auto typeattr = tag->first_attribute("type");
 		if (!typeattr) throw label_error("tag without type");
-		std::string tag_type = typeattr->value();
 		TagType type;
-		if (tag_type == "restrictive") {
+		if (typeattr->value() == "restrictive") {
 			type = TagType::restrictive;
-		} else if (tag_type == "permissive") {
+		} else if (typeattr->value() == "permissive") {
 			type = TagType::permissive;
-		} else if (tag_type == "enumeratedPermissive") {
+		} else if (typeattr->value() == "enumeratedPermissive") {
 			type = TagType::enumeratedPermissive;
-		} else if (tag_type == "enumeratedRestrictive") {
+		} else if (typeattr->value() == "enumeratedRestrictive") {
 			type = TagType::enumeratedRestrictive;
-		} else if (tag_type == "informative") {
+		} else if (typeattr->value() == "informative") {
 			type = TagType::informative;
-		} else throw label_error("unsupported tag type " + tag_type);
+		} else throw label_error("unsupported tag type " + std::string{typeattr->value()});
 		auto idattr = tag->first_attribute("id");
 		if (!idattr) throw label_error("tag without id");
-		std::string id = idattr->value();
 		auto lacvattr = tag->first_attribute("lacv");
 		if (!lacvattr) throw label_error("tag without lacv");
-		Lacv lacv = Lacv::parse(std::string(lacvattr->value(), lacvattr->value_size()));
-		auto cat = m_policy->tagSetLookup(id)->categoryLookup(type, lacv);
+		Lacv lacv = Lacv::parse(lacvattr->value());
+		auto cat = m_policy->tagSetLookup(idattr->value())->categoryLookup(type, lacv);
 		addCategory(cat);
 	}
 }
@@ -213,8 +206,7 @@ void Label::parse_xml_nato(std::string const & label) {
 	if (std::string("originatorConfidentialityLabel") != org->name()) {
 		throw label_error("Not a NATO originator label");
 	}
-	if (org->xmlns() == nullptr ||
-		std::string("urn:nato:stanag:4774:confidentialitymetadatalabel:1:0") != org->xmlns()) {
+	if (org->xmlns() != "urn:nato:stanag:4774:confidentialitymetadatalabel:1:0") {
 		throw label_error("XML Namespace of label is unknown");
 	}
 	auto info = org->first_node("ConfidentialityInformation");
@@ -246,19 +238,17 @@ void Label::parse_xml_nato(std::string const & label) {
 	for (auto tag = info->first_node("Category"); tag; tag = tag->next_sibling("Category")) {
 		auto typeattr = tag->first_attribute("Type");
 		if (!typeattr) throw label_error("tag without Type");
-		std::string tag_type = typeattr->value();
 		TagType type;
-		if (tag_type == "RESTRICTIVE") {
+		if (typeattr->value() == "RESTRICTIVE") {
 			type = TagType::restrictive;
-		} else if (tag_type == "PERMISSIVE") {
+		} else if (typeattr->value() == "PERMISSIVE") {
 			type = TagType::permissive;
-		} else if (tag_type == "INFORMATIVE") {
+		} else if (typeattr->value() == "INFORMATIVE") {
 			type = TagType::informative;
-		} else throw label_error("unsupported tag type " + tag_type);
+		} else throw label_error("unsupported tag type " + std::string{typeattr->value()});
 		auto tagname_a = tag->first_attribute("TagName");
 		if (!tagname_a) throw label_error("Category without TagName");
-		std::string tagname = tagname_a->value();
-		auto tagSet = m_policy->tagSetLookupByName(tagname);
+		auto tagSet = m_policy->tagSetLookupByName(tagname_a->value());
 		for (auto valtag = tag->first_node("GenericValue"); valtag; valtag = valtag->next_sibling("GenericValue")) {
 			auto cat = tagSet->categoryLookup(type, valtag->value());
 			addCategory(cat);
@@ -284,13 +274,13 @@ void Label::write_xml_debug(std::string & output) const {
 	auto root = doc.allocate_node(node_element, "label");
 	root->append_attribute(doc.allocate_attribute("xmlns", "http://surevine.com/xmlns/spiffy"));
 	auto policy = doc.allocate_node(node_element, "policy");
-	policy->append_attribute(doc.allocate_attribute("id", m_policy_id.c_str()));
+	policy->append_attribute(doc.allocate_attribute("id", m_policy_id));
 	root->append_node(policy);
 	auto classn = doc.allocate_node(node_element, "classification");
 	std::ostringstream ss;
 	ss << m_class->lacv();
 	std::string lacvstr = ss.str();
-	classn->append_attribute(doc.allocate_attribute("lacv", lacvstr.c_str()));
+	classn->append_attribute(doc.allocate_attribute("lacv", lacvstr));
 	root->append_node(classn);
 	// Category Encoding
 	for (auto const & cat : m_cats) {
@@ -316,8 +306,8 @@ void Label::write_xml_debug(std::string & output) const {
 			throw label_error("Tagtype unimplemented!");
 		}
 		tag->append_attribute(doc.allocate_attribute("type", p));
-		tag->append_attribute(doc.allocate_attribute("lacv", cat->lacv().toString().c_str()));
-		tag->append_attribute(doc.allocate_attribute("id", cat->tag().tagSet().id().c_str()));
+		tag->append_attribute(doc.allocate_attribute("lacv", cat->lacv().toString()));
+		tag->append_attribute(doc.allocate_attribute("id", cat->tag().tagSet().id()));
 		root->append_node(tag);
 	}
 	// Actual encoding
@@ -334,11 +324,11 @@ void Label::write_xml_nato(std::string & output) const {
 	auto root = doc.allocate_node(node_element, "ConfidentialityInformation");
 	auto policy = doc.allocate_node(node_element, "PolicyIdentifier");
 	std::string policy_uri{"urn:oid:" + m_policy_id};
-	policy->append_attribute(doc.allocate_attribute("URI", policy_uri.c_str()));
-	policy->value(m_policy->name().c_str());
+	policy->append_attribute(doc.allocate_attribute("URI", policy_uri));
+	policy->value(m_policy->name());
 	root->append_node(policy);
 	auto classn = doc.allocate_node(node_element, "Classification");
-	classn->value(m_class->name().c_str());
+	classn->value(m_class->name());
 	root->append_node(classn);
 	// Category Encoding
 	std::string tagset_id;
@@ -369,11 +359,11 @@ void Label::write_xml_nato(std::string & output) const {
 			tag->append_attribute(doc.allocate_attribute("Type", p));
 			// Note: needs a temp string.
 			// tag->append_attribute(doc.allocate_attribute("URI", "urn:oid:" + cat->tag().tagSet().id().c_str()));
-			tag->append_attribute(doc.allocate_attribute("TagName", cat->tag().tagSet().name().c_str()));
+			tag->append_attribute(doc.allocate_attribute("TagName", cat->tag().tagSet().name()));
 			root->append_node(tag);
 		}
 		auto catval = doc.allocate_node(node_element, "GenericValue");
-		catval->value(cat->name().c_str());
+		catval->value(cat->name());
         assert(tag);
 		tag->append_node(catval);
 	}
@@ -403,7 +393,8 @@ bool Label::hasCategory(CategoryRef const & r) const {
 	return m_cats.find(r) != m_cats.end();
 }
 
-std::unique_ptr<Label> Label::encrypt(std::string policy_id) const {
+std::unique_ptr<Label> Label::encrypt(std::string_view const & policy_idv) const {
+    std::string policy_id{policy_idv};
 	std::unique_ptr<Label> newl = m_class->encrypt(*this, policy_id);
 	for (auto & cat : m_cats) {
 		cat->encrypt(*newl, policy_id);

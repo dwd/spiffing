@@ -33,8 +33,8 @@ SOFTWARE.
 namespace Spiffing {
     class EquivCat {
     public:
-        EquivCat(std::string const & policy_id, std::string const & tagSetId, TagType tagType, Lacv lacv);
-        EquivCat(std::string const & policy_id); // discard
+        EquivCat(std::string_view const & policy_id, std::string_view const & tagSetId, TagType tagType, Lacv lacv);
+        explicit EquivCat(std::string_view const & policy_id); // discard
         void apply(Label &) const;
         std::string const & policy_id() const {
             return m_policy_id;

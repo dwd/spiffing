@@ -30,7 +30,7 @@ SOFTWARE.
 
 using namespace Spiffing;
 
-Tag::Tag(TagSet & tagSet, TagType tagType, InformativeEncoding t7enc, std::string const & name)
+Tag::Tag(TagSet & tagSet, TagType tagType, InformativeEncoding t7enc, std::string_view const & name)
 : m_name{name}, m_tagType(tagType), m_t7enc(t7enc), m_tagSet(tagSet) {
 }
 

@@ -37,6 +37,7 @@ SOFTWARE.
 #include <SecurityCategories.h>
 #include <stdexcept>
 #include <set>
+#include <charconv>
 
 namespace Spiffing {
 
@@ -68,8 +69,21 @@ namespace Spiffing {
     int write_to_string(const void * buffer, size_t size, void * app_key);
 
     std::string oid2str(OBJECT_IDENTIFIER_t * oid);
-    OBJECT_IDENTIFIER_t * str2oid(std::string const & s);
-    void str2oid(std::string const & s, OBJECT_IDENTIFIER_t *);
+    OBJECT_IDENTIFIER_t * str2oid(std::string_view const & s);
+    void str2oid(std::string_view const & s, OBJECT_IDENTIFIER_t *);
+
+    template<std::integral I>
+    I str2num(std::string_view const & s) {
+        I ret{};
+        auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), ret);
+        if (ec == std::errc{}) {
+            return ret;
+        } else if (ec == std::errc::invalid_argument) {
+            throw std::invalid_argument("Not a valid numeric string");
+        } else {
+            throw std::runtime_error(std::make_error_code(ec).message());
+        }
+    }
 
     SecurityCategories *nato_catencode(std::set<CategoryRef> const &);
     SecurityCategories *missi_catencode(std::set<CategoryRef> const &);

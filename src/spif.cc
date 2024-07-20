@@ -55,11 +55,11 @@ Spif::Spif(std::istream & s, Format fmt)
 }
 
 namespace {
-	Lacv parseLacv(rapidxml::xml_attribute<> * lacv) {
-		return Lacv::parse(std::string{(char *)lacv->value(), lacv->value_size()});
+	Lacv parseLacv(rapidxml::xml_attribute<>::ptr lacv) {
+		return Lacv::parse(lacv->value());
 	}
 
-	std::unique_ptr<Markings> parseMarkings(rapidxml::xml_node<> * holder) {
+	std::unique_ptr<Markings> parseMarkings(rapidxml::xml_node<>::ptr holder) {
 		std::set<std::string> langTags; // Previously processed tags.
 		std::unique_ptr<Markings> markings;
 		for (;;) {
@@ -70,7 +70,7 @@ namespace {
 					"markingQualifier")) {
 				for (auto q = qual->first_node("qualifier"); q; q = q->next_sibling("qualifier")) {
 					if (auto lt_attr = q->first_attribute("xml:lang")) {
-						std::string tag = lt_attr->value();
+						std::string tag{lt_attr->value()};
 						if (found) {
 							if (langTag != lt_attr->value()) {
 								continue; // Not yet.
@@ -87,7 +87,7 @@ namespace {
 					} else {
 						// No language tag set.
 						if (found) {
-							if (langTag != "") {
+							if (!langTag.empty()) {
 								continue;
 							}
 						} else {
@@ -102,16 +102,14 @@ namespace {
 					auto qcode_a = q->first_attribute("qualifierCode");
 					auto txt_a = q->first_attribute("markingQualifier");
 					if (!txt_a) continue;
-					std::string txt(txt_a->value(), txt_a->value_size());
 					if (qcode_a) {
-						std::string qcode(qcode_a->value(), qcode_a->value_size());
 						if (!ptr) ptr = std::make_unique<Marking>(langTag);
-						if (qcode == "prefix") {
-							ptr->prefix(txt);
-						} else if (qcode == "suffix") {
-							ptr->suffix(txt);
-						} else if (qcode == "separator") {
-							ptr->sep(txt);
+						if (qcode_a->value() == "prefix") {
+							ptr->prefix(txt_a->value());
+						} else if (qcode_a->value() == "suffix") {
+							ptr->suffix(txt_a->value());
+						} else if (qcode_a->value() == "separator") {
+							ptr->sep(txt_a->value());
 						}
 					}
 				}
@@ -125,15 +123,13 @@ namespace {
 						auto qcode_a = q->first_attribute("qualifierCode");
 						auto txt_a = q->first_attribute("markingQualifier");
 						if (!txt_a) continue;
-						std::string txt(txt_a->value(), txt_a->value_size());
 						if (qcode_a) {
-							std::string qcode(qcode_a->value(), qcode_a->value_size());
-							if (qcode == "prefix") {
-								if (ptr->prefix().empty()) ptr->prefix(txt);
-							} else if (qcode == "suffix") {
-								if (ptr->suffix().empty()) ptr->suffix(txt);
-							} else if (qcode == "separator") {
-								if (ptr->sep().empty()) ptr->sep(txt);
+							if (qcode_a->value() == "prefix") {
+								if (ptr->prefix().empty()) ptr->prefix(txt_a->value());
+							} else if (qcode_a->value() == "suffix") {
+								if (ptr->suffix().empty()) ptr->suffix(txt_a->value());
+							} else if (qcode_a->value() == "separator") {
+								if (ptr->sep().empty()) ptr->sep(txt_a->value());
 							}
 						}
 					}
@@ -141,7 +137,7 @@ namespace {
 			}
 			for (auto data = holder->first_node("markingData"); data; data = data->next_sibling("markingData")) {
 				if (auto lt_attr = data->first_attribute("xml:lang")) {
-					std::string tag = lt_attr->value();
+					std::string tag{lt_attr->value()};
 					if (found) {
 						if (langTag != lt_attr->value()) {
 							continue; // Not yet.
@@ -175,29 +171,28 @@ namespace {
 				int loc(0);
 				bool locset = false;
 				for (auto code = data->first_node("code"); code; code = code->next_sibling("code")) {
-					std::string codename(code->value(), code->value_size());
-					if (codename == "noMarkingDisplay") {
+					if (code->value() == "noMarkingDisplay") {
 						loc |= MarkingCode::noMarkingDisplay;
 						locset = true;
-					} else if (codename == "noNameDisplay") {
+					} else if (code->value() == "noNameDisplay") {
 						loc |= MarkingCode::noNameDisplay;
-					} else if (codename == "suppressClassName") {
+					} else if (code->value() == "suppressClassName") {
 						loc |= MarkingCode::suppressClassName;
-					} else if (codename == "pageBottom") {
+					} else if (code->value() == "pageBottom") {
 						loc |= MarkingCode::pageBottom;
 						locset = true;
-					} else if (codename == "pageTop") {
+					} else if (code->value() == "pageTop") {
 						loc |= MarkingCode::pageTop;
 						locset = true;
-					} else if (codename == "pageTopBottom") {
+					} else if (code->value() == "pageTopBottom") {
 						loc |= MarkingCode::pageTop | MarkingCode::pageBottom;
 						locset = true;
-					} else if (codename == "replacePolicy") {
+					} else if (code->value() == "replacePolicy") {
 						loc |= MarkingCode::replacePolicy;
-					} else if (codename == "documentStart") {
+					} else if (code->value() == "documentStart") {
 						loc |= MarkingCode::documentStart;
 						locset = true;
-					} else if (codename == "documentEnd") {
+					} else if (code->value() == "documentEnd") {
 						loc |= MarkingCode::documentEnd;
 						locset = true;
 					} else {
@@ -209,7 +204,7 @@ namespace {
 				}
 				std::optional<std::string> phrase;
 				if (phrase_a) {
-					phrase.emplace(phrase_a->value(), phrase_a->value_size());
+					phrase.emplace(phrase_a->value());
 				}
 				ptr->addPhrase(loc, phrase);
 			}
@@ -222,20 +217,18 @@ namespace {
 		}
 	}
 
-	TagType parseTagType(rapidxml::xml_node<> * node) {
+	TagType parseTagType(rapidxml::xml_node<>::ptr node) {
 		auto tagType_a = node->first_attribute("tagType");
 		if (!tagType_a) throw spif_syntax_error("element has no tagType");
-		std::string tagTypeName = tagType_a->value();
 		TagType tagType;
-		if (tagTypeName == "permissive") {
+		if (tagType_a->value() == "permissive") {
 			tagType = TagType::permissive;
-		} else if (tagTypeName == "restrictive") {
+		} else if (tagType_a->value() == "restrictive") {
 			tagType = TagType::restrictive;
-		} else if (tagTypeName == "enumerated") {
+		} else if (tagType_a->value() == "enumerated") {
 			auto enumType_a = node->first_attribute("enumType");
 			if (!enumType_a) throw spif_syntax_error("element has no enumType");
-			std::string enumTypeName = enumType_a->value();
-			if (enumTypeName == "permissive") {
+			if (enumType_a->value() == "permissive") {
 				tagType = TagType::enumeratedPermissive;
 			} else {
 				tagType = TagType::enumeratedRestrictive;
@@ -247,7 +240,7 @@ namespace {
 	}
 
 	// For excludedCategory, also used within categoryGroup.
-	std::unique_ptr<CategoryData> parseOptionalCategoryData(rapidxml::xml_node<> * node) {
+	std::unique_ptr<CategoryData> parseOptionalCategoryData(rapidxml::xml_node<>::ptr node) {
 		std::string tagSetRef;
 		auto tagSetRef_a = node->first_attribute("tagSetRef");
 		if (tagSetRef_a) {
@@ -266,16 +259,15 @@ namespace {
 	}
 
 	// For requiredCategory
-	std::unique_ptr<CategoryGroup> parseCategoryGroup(rapidxml::xml_node<> * node) {
+	std::unique_ptr<CategoryGroup> parseCategoryGroup(rapidxml::xml_node<>::ptr node) {
 		auto op_a = node->first_attribute("operation");
-		if (!op_a || !op_a->value()) throw spif_syntax_error("Missing operation attribute from CategoryGroup");
-		std::string opname{op_a->value(), op_a->value_size()};
+		if (!op_a || op_a->value().empty()) throw spif_syntax_error("Missing operation attribute from CategoryGroup");
 		OperationType opType{OperationType::onlyOne};
-		if (opname == "onlyOne") {
+		if (op_a->value() == "onlyOne") {
 			opType = OperationType::onlyOne;
-		} else if (opname == "oneOrMore") {
+		} else if (op_a->value() == "oneOrMore") {
 			opType = OperationType::oneOrMore;
-		} else if (opname == "all") {
+		} else if (op_a->value() == "all") {
 			opType = OperationType::all;
 		}
 		std::unique_ptr<CategoryGroup> group = std::make_unique<CategoryGroup>(opType);
@@ -286,64 +278,65 @@ namespace {
 	}
 
 	template<typename T>
-	void parseExcludedClass(rapidxml::xml_node<> * node, T & t, std::map<std::string,std::shared_ptr<Classification>> const & classNames) {
+	void parseExcludedClass(rapidxml::xml_node<>::ptr node, T & t, std::map<std::string,std::shared_ptr<Classification>> const & classNames) {
 		for (auto excClass = node->first_node("excludedClass"); excClass; excClass = excClass->next_sibling("excludedClass")) {
-			if (!excClass->value() || !excClass->value_size()) throw spif_syntax_error("Empty excludedClass element");
-			std::string className{excClass->value(), excClass->value_size()};
+			if (excClass->value().empty()) throw spif_syntax_error("Empty excludedClass element");
+			std::string className{excClass->value()};
 			auto it = classNames.find(className);
 			if (it == classNames.end()) throw spif_ref_error("Unknown classification in exclusion");
 			t->excluded(*(*it).second);
 		}
 	}
 
-	std::shared_ptr<Classification> parseClassification(rapidxml::xml_node<> * classification, std::map<std::string,std::string> const & equivPolicies) {
+	std::shared_ptr<Classification> parseClassification(rapidxml::xml_node<>::ptr classification, std::map<std::string,std::string> const & equivPolicies) {
 		auto lacv_a = classification->first_attribute("lacv");
-		lacv_t lacv{strtoull(lacv_a->value(), NULL, 10)};
+		std::integral auto lacv = Internal::str2num<lacv_t>(lacv_a->value());
 		auto name_a = classification->first_attribute("name");
 		std::string name{name_a->value()};
 		auto hierarchy_a = classification->first_attribute("hierarchy");
-		unsigned long hierarchy{strtoul(hierarchy_a->value(), NULL, 10)};
+		std::integral auto hierarchy = Internal::str2num<unsigned long>(hierarchy_a->value());
 		std::shared_ptr<Classification> cls = std::make_shared<Classification>(lacv, name, hierarchy);
 		for (auto reqCat = classification->first_node("requiredCategory"); reqCat; reqCat = reqCat->next_sibling("requiredCategory")) {
 			cls->addRequiredCategory(parseCategoryGroup(reqCat));
 		}
 		for (auto equivClass = classification->first_node("equivalentClassification"); equivClass; equivClass = equivClass->next_sibling("equivalentClassification")) {
 			auto equivName = equivClass->first_attribute("policyRef");
-			if (!equivName || !equivName->value()) throw spif_syntax_error("Equivalent Classification requires policyRef");
-			auto i = equivPolicies.find(equivName->value());
+			if (!equivName || equivName->value().empty()) throw spif_syntax_error("Equivalent Classification requires policyRef");
+            std::string equivNameStr{equivName->value()};
+			auto i = equivPolicies.find(equivNameStr);
 			if (i == equivPolicies.end()) throw spif_ref_error("PolicyRef not found");
 			auto llacv_a = equivClass->first_attribute("lacv");
-			lacv_t llacv{strtoull(llacv_a->value(), NULL, 10)};
+			std::integral auto llacv = Internal::str2num<lacv_t>(llacv_a->value());
 			auto when_a = equivClass->first_attribute("applied");
-			if (!when_a || !when_a->value()) throw spif_syntax_error("Missing applied in equivClass");
-			std::string when{when_a->value()};
+			if (!when_a || when_a->value().empty()) throw spif_syntax_error("Missing applied in equivClass");
 			std::shared_ptr<EquivClassification> equiv = std::make_shared<EquivClassification>((*i).second, llacv);
 			for (auto reqCat = equivClass->first_node("requiredCategory"); reqCat; reqCat = reqCat->next_sibling("requiredCategory")) {
 				equiv->addRequiredCategory(parseCategoryGroup(reqCat));
 			}
-			if (when == "encrypt" || when == "both") {
+			if (when_a->value() == "encrypt" || when_a->value() == "both") {
 				cls->equivEncrypt(equiv);
 			}
-			if (when == "decrypt" || when == "both") {
+			if (when_a->value() == "decrypt" || when_a->value() == "both") {
 				cls->equivDecrypt(equiv);
 			}
 		}
 		cls->markings(parseMarkings(classification));
 		auto color_a = classification->first_attribute("color");
-		if (color_a && color_a->value()) {
+		if (color_a && color_a->value().empty()) {
 			cls->fgcolour(color_a->value());
 		}
 		return cls;
 	}
 
-	std::shared_ptr<EquivCat> parseEquivCat(rapidxml::xml_node<> * equiv, std::map<std::string,std::string> const & policies) {
+	std::shared_ptr<EquivCat> parseEquivCat(rapidxml::xml_node<>::ptr equiv, std::map<std::string,std::string> const & policies) {
 		auto policyref_a = equiv->first_attribute("policyRef");
-		if (!policyref_a || !policyref_a->value()) throw spif_syntax_error("Missing PolicyRef");
-		auto i = policies.find(policyref_a->value());
+		if (!policyref_a || policyref_a->value().empty()) throw spif_syntax_error("Missing PolicyRef");
+        std::string policyref_s{policyref_a->value()};
+		auto i = policies.find(policyref_s);
 		if (i == policies.end()) throw spif_ref_error("PolicyRef not found");
 		std::string policy_id = (*i).second;
 		auto tagsetid_a = equiv->first_attribute("tagSetId");
-		if (!tagsetid_a || !tagsetid_a->value()) throw spif_syntax_error("Missing tagSetId");
+		if (!tagsetid_a || tagsetid_a->value().empty()) throw spif_syntax_error("Missing tagSetId");
 		TagType tagType = parseTagType(equiv);
 		Lacv lacv = parseLacv(equiv->first_attribute("lacv"));
 		bool discard = (equiv->first_attribute("action") != nullptr);
@@ -354,7 +347,7 @@ namespace {
 		}
 	}
 
-	std::shared_ptr<TagSet> parseTagSet(rapidxml::xml_node<> * tagSet,
+	std::shared_ptr<TagSet> parseTagSet(rapidxml::xml_node<>::ptr tagSet,
 										size_t & ordinal,
 										std::map<std::string, std::shared_ptr<Classification>> const & classNames,
 										std::map<std::string,std::string> const & policies) {
@@ -370,8 +363,7 @@ namespace {
 			if (tagType == TagType::informative) {
 				auto t7type_a = tag->first_attribute("tag7Encoding");
 				if (!t7type_a) throw spif_syntax_error("element has no tag7Encoding");
-				std::string t7type = t7type_a->value();
-				if (t7type == "bitSetAttributes") {
+				if (t7type_a->value() == "bitSetAttributes") {
 					t7enc = InformativeEncoding::bitSet;
 				} else {
 					t7enc = InformativeEncoding::enumerated;
@@ -420,13 +412,13 @@ void Spif::parse(std::string const & s, Format fmt) {
 		throw spif_error("Not a spif");
 	}
 	auto rbacId = node->first_attribute("rbacId");
-	if (rbacId && rbacId->value()) {
+	if (rbacId && !rbacId->value().empty()) {
 		m_rbacId = rbacId->value();
 	} else {
 		m_rbacId = OID::NATO;
 	}
 	auto privilegeId = node->first_attribute("privilegeId");
-	if (privilegeId && privilegeId->value()) {
+	if (privilegeId && !privilegeId->value().empty()) {
 		m_privilegeId = privilegeId->value();
 	} else {
 		m_privilegeId = OID::NATO;
@@ -447,10 +439,10 @@ void Spif::parse(std::string const & s, Format fmt) {
 		for (auto equivPolicy = equivPolicies->first_node(
 				"equivalentPolicy"); equivPolicy; equivPolicy = equivPolicy->next_sibling("equivalentPolicy")) {
 			auto name_a = equivPolicy->first_attribute("name");
-			if (!name_a || !name_a->value()) throw spif_syntax_error("Equivalent policy requires name");
+			if (!name_a || name_a->value().empty()) throw spif_syntax_error("Equivalent policy requires name");
 			std::string name{name_a->value()};
 			auto id_a = equivPolicy->first_attribute("id");
-			if (!id_a || !id_a->value()) throw spif_syntax_error("Equivalent policy requires id");
+			if (!id_a || id_a->value().empty()) throw spif_syntax_error("Equivalent policy requires id");
 			std::string id{id_a->value()};
 			m_equivPolicies.insert(std::make_pair(name, id));
 			for (auto reqCat = equivPolicy->first_node("requiredCategory"); reqCat; reqCat = reqCat->next_sibling(
@@ -678,13 +670,15 @@ bool Spif::acdf(Label const & label, Spiffing::Clearance const & clearance) cons
 	return true;
 }
 
-std::shared_ptr<TagSet> const & Spif::tagSetLookup(std::string const & tagSetId) const {
+std::shared_ptr<TagSet> const & Spif::tagSetLookup(std::string_view const & tagSetIdv) const {
+    std::string tagSetId{tagSetIdv};
 	auto i = m_tagSets.find(tagSetId);
 	if (i == m_tagSets.end()) throw spif_ref_error("Unknown tagset id: " + tagSetId);
 	return (*i).second;
 }
 
-std::shared_ptr<TagSet> const & Spif::tagSetLookupByName(std::string const & tagSet) const {
+std::shared_ptr<TagSet> const & Spif::tagSetLookupByName(std::string_view const & tagSetv) const {
+    std::string tagSet{tagSetv};
 	auto i = m_tagSetsByName.find(tagSet);
 	if (i == m_tagSetsByName.end()) throw spif_ref_error("Unknown tagset name: " + tagSet);
 	return (*i).second;

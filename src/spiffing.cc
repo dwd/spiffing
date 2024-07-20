@@ -15,13 +15,15 @@ Site::Site() : m_spifs() {
     s_spiffing = this;
 }
 
-std::shared_ptr<Spif> const & Site::spif(std::string const & oid) const {
+std::shared_ptr<Spif> const & Site::spif(std::string_view const & oidv) const {
+    std::string oid{oidv};
     auto i = m_spifs.find(oid);
     if (i == m_spifs.end()) throw spif_ref_error("Unknown policy id: " + oid);
     return (*i).second;
 }
 
-std::shared_ptr<Spif> const & Site::spif_by_name(std::string const & name) const {
+std::shared_ptr<Spif> const & Site::spif_by_name(std::string_view const & namev) const {
+    std::string name{namev};
     auto i = m_spifnames.find(name);
     if (i == m_spifnames.end()) throw spif_ref_error("Unknown policy name: " + name);
     return (*i).second;

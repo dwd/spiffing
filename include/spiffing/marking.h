@@ -43,14 +43,14 @@ namespace Spiffing {
     std::string const & prefix() const {
       return m_prefix;
     }
-    std::string const & prefix(std::string const & p) {
+    std::string const & prefix(std::string_view const & p) {
       return m_prefix = p;
     }
 
     std::string const & suffix() const {
       return m_suffix;
     }
-    std::string const & suffix(std::string const & s) {
+    std::string const & suffix(std::string_view const & s) {
       return m_suffix = s;
     }
 
@@ -63,7 +63,7 @@ namespace Spiffing {
     std::string const & sep() const {
       return m_sep;
     }
-    std::string const & sep(std::string const & s) {
+    std::string const & sep(std::string_view const & s) {
       return m_sep = s;
     }
 

@@ -33,11 +33,11 @@ SOFTWARE.
 
 using namespace Spiffing;
 
-CategoryData::CategoryData(std::string const & tagSetRef, TagType tagType)
+CategoryData::CategoryData(std::string_view const & tagSetRef, TagType tagType)
   : m_tagSetRef(tagSetRef), m_tagType(tagType), m_all(true) {
 }
 
-CategoryData::CategoryData(std::string const & tagSetRef, TagType tagType, Lacv const & l)
+CategoryData::CategoryData(std::string_view const & tagSetRef, TagType tagType, Lacv const & l)
   : m_tagSetRef(tagSetRef), m_tagType(tagType), m_lacv(l), m_all(false) {
 }
 
