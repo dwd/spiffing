@@ -28,13 +28,15 @@ SOFTWARE.
 #include <spiffing/spif.h>
 #include <spiffing/tagset.h>
 
+#include <utility>
+
 using namespace Spiffing;
 
-EquivCat::EquivCat(std::string const & policy_id, std::string const & tagSetId, TagType tagType, Lacv lacv)
-    : m_discard(false), m_policy_id(policy_id), m_tagSetId(tagSetId), m_tagType(tagType), m_lacv(lacv) {
+EquivCat::EquivCat(std::string_view const & policy_id, std::string_view const & tagSetId, TagType tagType, Lacv lacv)
+    : m_discard(false), m_policy_id(policy_id), m_tagSetId(tagSetId), m_tagType(tagType), m_lacv(std::move(lacv)) {
 }
 
-EquivCat::EquivCat(std::string const & policy_id)
+EquivCat::EquivCat(std::string_view const & policy_id)
     : m_discard(true), m_policy_id(policy_id), m_tagType(TagType::informative) {
 }
 

@@ -37,7 +37,7 @@ SOFTWARE.
 namespace Spiffing {
     class TagSet {
     public:
-        TagSet(std::string const & id, std::string const & name);
+        TagSet(std::string_view const & id, std::string_view const & name);
 
         std::string const & id() const {
             return m_id;
@@ -52,7 +52,8 @@ namespace Spiffing {
           if (i == m_cats.end()) throw std::runtime_error("Cannot find the tagType/LACV");
           return (*i).second;
         }
-        std::shared_ptr<Category> const & categoryLookup(TagType type, std::string const & name) const {
+        std::shared_ptr<Category> const & categoryLookup(TagType type, std::string_view const & namev) const {
+            std::string name{namev};
             auto i = m_catnames.find(std::make_pair(type, name));
             if (i == m_catnames.end()) throw std::runtime_error("Cannot find the tagType/name: " + name);
             return (*i).second;

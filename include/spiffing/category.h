@@ -37,7 +37,7 @@ SOFTWARE.
 namespace Spiffing {
     class Category {
     public:
-        Category(Tag & tag, std::string const & name, Lacv const & lacv, size_t ordinal);
+        Category(Tag & tag, std::string_view const & name, Lacv const & lacv, size_t ordinal);
 
         std::string const & name() const {
           return m_name;

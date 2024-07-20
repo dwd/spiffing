@@ -36,8 +36,8 @@ SOFTWARE.
 namespace Spiffing {
   class CategoryData {
   public:
-    CategoryData(std::string const & tagSetRef, TagType tagType, Lacv const & l);
-    CategoryData(std::string const & tagSetRef, TagType tagType);
+    CategoryData(std::string_view const & tagSetRef, TagType tagType, Lacv const & l);
+    CategoryData(std::string_view const & tagSetRef, TagType tagType);
 
     void compile(Spif const &);
     bool matches(Label const &) const;

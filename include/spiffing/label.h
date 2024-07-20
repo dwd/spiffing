@@ -56,7 +56,7 @@ namespace Spiffing {
 
 		void addCategory(std::shared_ptr<Category> const & cat);
 
-		std::unique_ptr<Label> encrypt(std::string policy_id) const;
+		std::unique_ptr<Label> encrypt(std::string_view const & policy_id) const;
 	private:
 		void parse_ber(std::string const & label);
 		void parse_xml(std::string const & label);

@@ -67,18 +67,19 @@ namespace Spiffing {
 			return m_rbacId;
 		}
 
-		std::string const & name() const {
+		[[nodiscard]] std::string const & name() const {
 			return m_name;
 		}
 
-		std::shared_ptr<TagSet> const & tagSetLookup(std::string const &) const;
-		std::shared_ptr<TagSet> const & tagSetLookupByName(std::string const &) const;
-		std::shared_ptr<Classification> const & classificationLookup(lacv_t cls) const {
+		[[nodiscard]] std::shared_ptr<TagSet> const & tagSetLookup(std::string_view const &) const;
+        [[nodiscard]] std::shared_ptr<TagSet> const & tagSetLookupByName(std::string_view const &) const;
+        [[nodiscard]] std::shared_ptr<Classification> const & classificationLookup(lacv_t cls) const {
 			auto i = m_classifications.find(cls);
 			if (i == m_classifications.end()) throw std::runtime_error("Unknown classification");
 			return (*i).second;
 		}
-		std::shared_ptr<Classification> const & classificationLookup(std::string const & cls) const {
+        [[nodiscard]] std::shared_ptr<Classification> const & classificationLookup(std::string_view const & clsv) const {
+            std::string cls{clsv};
 			auto i = m_classnames.find(cls);
 			if (i == m_classnames.end()) throw std::runtime_error("Unknown classification");
 			return (*i).second;

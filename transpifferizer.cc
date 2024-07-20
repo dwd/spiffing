@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     Opts opts{argc, argv};
 
     if (opts.clearance) {
-      std::unique_ptr<Clearance> clearance = std::move(load<Clearance>(opts, opts.input));
+      std::unique_ptr<Clearance> clearance = load<Clearance>(opts, opts.input);
       write(*clearance, opts.output);
     } else {
       std::unique_ptr<Label> label{load<Label>(opts, opts.input)};

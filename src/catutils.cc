@@ -23,6 +23,8 @@ SOFTWARE.
 
 ***/
 
+#include <string>
+
 #include <spiffing/catutils.h>
 #include <spiffing/tag.h>
 #include <spiffing/tagset.h>
@@ -48,9 +50,10 @@ SOFTWARE.
 #include <spiffing/exceptions.h>
 
 using namespace Spiffing;
+using namespace std::string_literals;
 
 int Internal::write_to_string(const void * buffer, size_t size, void * app_key) {
-  std::string * s = reinterpret_cast<std::string *>(app_key);
+  auto * s = reinterpret_cast<std::string *>(app_key);
   s->append(reinterpret_cast<const char *>(buffer), size);
   return 1; // Something non-negative.
 }
@@ -61,16 +64,20 @@ std::string Internal::oid2str(OBJECT_IDENTIFIER_t * oid) {
   return tmp;
 }
 
-OBJECT_IDENTIFIER_t * Internal::str2oid(std::string const & oid) {
+OBJECT_IDENTIFIER_t * Internal::str2oid(std::string_view const & oid) {
   Asn<OBJECT_IDENTIFIER_t> o(&asn_DEF_OBJECT_IDENTIFIER);
-  std::string tmp = "<OBJECT_IDENTIFIER>" + oid + "</OBJECT_IDENTIFIER>";
-  xer_decode(0, &asn_DEF_OBJECT_IDENTIFIER, o.addr(), tmp.data(), tmp.size());
+  std::string tmp = "<OBJECT_IDENTIFIER>";
+  tmp += oid;
+  tmp += "</OBJECT_IDENTIFIER>";
+  xer_decode(nullptr, &asn_DEF_OBJECT_IDENTIFIER, o.addr(), tmp.data(), tmp.size());
   return o.release();
 }
 
-void Internal::str2oid(std::string const & oid, OBJECT_IDENTIFIER_t * o) {
-  std::string tmp = "<OBJECT_IDENTIFIER>" + oid + "</OBJECT_IDENTIFIER>";
-  xer_decode(0, &asn_DEF_OBJECT_IDENTIFIER, (void **)&o, tmp.data(), tmp.size());
+void Internal::str2oid(std::string_view const & oid, OBJECT_IDENTIFIER_t * o) {
+  std::string tmp = "<OBJECT_IDENTIFIER>";
+  tmp += oid;
+  tmp += "</OBJECT_IDENTIFIER>";
+  xer_decode(nullptr, &asn_DEF_OBJECT_IDENTIFIER, (void **)&o, tmp.data(), tmp.size());
 }
 
 namespace {
@@ -78,7 +85,7 @@ namespace {
     std::size_t sz = bitString.size;
     if (sz == 0) {
       sz = 4;
-      unsigned char * tmp = (unsigned char *) calloc(sizeof(unsigned char), sz);
+      auto * tmp = (unsigned char *) calloc(sizeof(unsigned char), sz);
       if (!tmp) throw std::bad_alloc();
       bitString.buf = tmp;
       bitString.size = sz;
@@ -86,21 +93,22 @@ namespace {
     if (sz <= bit / 8) {
       std::size_t old_sz = sz;
       while (sz <= bit / 8) sz += 4;
-      unsigned char * tmp = (unsigned char *)realloc(bitString.buf, sz);
+      auto * tmp = (unsigned char *)realloc(bitString.buf, sz);
       if (!tmp) throw std::bad_alloc();
       bitString.buf = tmp;
       memset(bitString.buf + old_sz, 0, sz - old_sz);
       bitString.size = sz;
     }
     bitString.buf[bit / 8] |= (1 << (7 - (bit % 8)));
-    bitString.bits_unused = (8 * bitString.size) - (8 * (bitString.size - (bit / 8)) + (1 << (bit % 8)));
+    bitString.bits_unused = static_cast<int>(8 * bitString.size) - (8 * (bitString.size - (bit / 8)) + (1 << (bit % 8)));
   }
 
   typedef A_SET_OF(SecurityAttribute_t) SecurityAttributes;
   void setatt(SecurityAttributes & atts, Lacv const & att) {
     std::size_t sz = atts.size;
     if (sz == 0) {
-      atts.size = sz = 4;
+      sz = 4;
+      atts.size = static_cast<int>(sz);
       auto tmp = (INTEGER_t **)calloc(sz * sizeof(INTEGER_t *), sz);
       if (!tmp) throw std::bad_alloc();
       atts.array = tmp;
@@ -112,7 +120,7 @@ namespace {
       if (!tmp) throw std::bad_alloc();
       atts.array = tmp;
       memset(atts.array + old_sz, 0, (sz - old_sz) * sizeof(INTEGER_t *));
-      atts.size = sz;
+      atts.size = static_cast<int>(sz);
     }
     Asn<INTEGER_t> lacv(&asn_DEF_INTEGER);
     lacv.alloc();

@@ -52,10 +52,12 @@ void Lacv::parse(std::size_t iname) {
   m_str = s;
 }
 
-Lacv Lacv::parse(std::string const & lstr) {
+Lacv Lacv::parse(std::string_view const & lstr) {
   Asn<INTEGER_t> i(&asn_DEF_INTEGER);
-  std::string tmp = "<INTEGER>" + lstr + "</INTEGER>";
-  xer_decode(0, &asn_DEF_INTEGER, i.addr(), tmp.data(), tmp.size());
+  std::string tmp{"<INTEGER>"};
+  tmp += lstr;
+  tmp += "</INTEGER>";
+  xer_decode(nullptr, &asn_DEF_INTEGER, i.addr(), tmp.data(), tmp.size());
   Lacv lacv{std::string{reinterpret_cast<char *>(i->buf), static_cast<size_t>(i->size)}};
   lacv.m_str = lstr;
   return lacv;

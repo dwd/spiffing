@@ -32,7 +32,7 @@ SOFTWARE.
 
 using namespace Spiffing;
 
-Category::Category(Tag & tag, std::string const & name, Lacv const & lacv, size_t ordinal)
+Category::Category(Tag & tag, std::string_view const & name, Lacv const & lacv, size_t ordinal)
 : m_lacv(lacv), m_name(name), m_tag(tag), m_ordinal(ordinal) {
 }
 

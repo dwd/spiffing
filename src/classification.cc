@@ -31,7 +31,7 @@ SOFTWARE.
 
 using namespace Spiffing;
 
-Classification::Classification(lacv_t lacv, std::string const & name, unsigned long hierarchy, bool obsolete)
+Classification::Classification(lacv_t lacv, std::string_view const & name, unsigned long hierarchy, bool obsolete)
 : m_lacv{lacv}, m_name{name}, m_hierarchy{hierarchy}, m_obsolete{obsolete} {
 }
 
@@ -58,7 +58,8 @@ void Classification::equivEncrypt(std::shared_ptr<EquivClassification> const & e
 void Classification::equivDecrypt(std::shared_ptr<EquivClassification> const & equiv) {
 	m_equivDecrypt.insert(std::make_pair(equiv->policy_id(), equiv));
 }
-std::unique_ptr<Label> Classification::encrypt(Label const & old, std::string const & policy_id) const {
+std::unique_ptr<Label> Classification::encrypt(Label const & old, std::string_view const & policy_idv) const {
+    std::string policy_id{policy_idv};
 	auto i = m_equivEncrypt.find(policy_id);
 	if (i == m_equivEncrypt.end()) throw equiv_error("No equivalent classification");
 	auto equiv = (*i).second;

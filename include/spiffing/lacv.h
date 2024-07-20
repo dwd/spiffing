@@ -36,12 +36,11 @@ namespace Spiffing {
         Lacv(std::size_t);
         Lacv();
 
-        static Lacv parse(std::string const &);
+        static Lacv parse(std::string_view const &);
 
         std::string const & text() const {
           return m_name;
         }
-        bool ascii() const;
         bool operator <(Lacv const & l) const {
           return m_name < l.m_name;
         }

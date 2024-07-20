@@ -31,7 +31,7 @@ SOFTWARE.
 
 using namespace Spiffing;
 
-TagSet::TagSet(std::string const & id, std::string const & name)
+TagSet::TagSet(std::string_view const & id, std::string_view const & name)
 : m_id{id}, m_name{name} {
 }
 
