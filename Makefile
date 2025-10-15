@@ -79,7 +79,7 @@ CXXFLAGS=-std=c++14
 gen-ber/.marker: $(ASNSOURCE) acp145.asn
 	@mkdir -p $(dir $@)
 	@touch gen-ber/.marker
-	@(cd $(dir $@) && $(ASN1C) -fwide-types -fcompound-names $(^:%=../%))
+	@(cd $(dir $@) && $(ASN1C) -fwide-types -fcompound-names -fskeletons-copy $(^:%=../%))
 	@-mv gen-ber/converter-example.c .
 	@echo $(GENBEROBJS) $(GENBERSOURCE)
 
