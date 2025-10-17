@@ -55,7 +55,7 @@ jobs:
       - name: Build Wrapper
         run: build-wrapper-linux-x86-64 --out-dir sonar-out cmake --build sonar-build
       - name: CMake Tests
-        run: cd ./test-data && ./sonar-build/test-spiffing test.xml
+        run: cd ./test-data && ../sonar-build/test-spiffing tests.xml
       - name: Show coverage
         run: cd ./sonar-build && gcovr -r .. --gcov-ignore-parse-errors
       - name: Collate coverage
