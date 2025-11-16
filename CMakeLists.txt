@@ -18,7 +18,7 @@ string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE_UPPER)
 
 # Set ASN1C paths based on build type
 set(ASN1C ${asn1c_BIN_DIRS_${BUILD_TYPE_UPPER}}/asn1c)
-set(ASN1C_SKELETON ${asn1c_BIN_DIRS_${BUILD_TYPE_UPPER}}/../res/asn1c)
+set(ASN1C_SKELETON ${asn1c_RES_DIRS_${BUILD_TYPE_UPPER}})
 
 # Debug: Print what we found
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -35,7 +35,7 @@ endforeach(ASN1_FILE)
 
 # Generate files at configure time to know what files exist
 if(asn1c_FOUND)
-    message(STATUS "Running: ${ASN1C} -S ${ASN1C_SKELETON} -fwide-types -fcompound-names -no-gen-example ${ASN1C_FILES}")
+    message(STATUS "Running: ${ASN1C} -S ${ASN1C_SKELETON} -fwide-types -fcompound-names ${ASN1C_FILES}")
     execute_process(
         COMMAND ${ASN1C} -S "${ASN1C_SKELETON}" -fwide-types -fcompound-names ${ASN1C_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen-ber
@@ -48,7 +48,7 @@ endif()
 
 message("Globbing output files")
 # Now glob the generated files
-file(GLOB ASN_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/gen-ber/*.c)
+file(GLOB ASN_C_FILES ${CMAKE_CURRENT_BINARY_DIR}/gen-ber/*.c ${ASN1C_SKELETON}/asn1c/*.c)
 # Remove converter-sample.c from the list
 list(FILTER ASN_C_FILES EXCLUDE REGEX "converter-sample\\.c$")
 message("Found ${ASN_C_FILES}")
@@ -58,14 +58,15 @@ set_property(SOURCE ${ASN_SOURCE_FILES} PROPERTY GENERATED TRUE)
 
 # Re-generate at build time in case ASN1 sources change
 add_custom_target(gen-ber
-        DEPENDS ${ASN1_SOURCES} ${asn1c_BIN_DIRS_DEBUG}/asn1c
+        DEPENDS ${ASN1_SOURCES} ${ASN1C}
         COMMAND ${ASN1C} -S "${ASN1C_SKELETON}" -fwide-types -fcompound-names ${ASN1C_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/gen-ber)
 add_dependencies(gen-ber asn1c::asn1c)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/gen-ber ${asn1c_INCLUDE_DIRS})
 add_library(spiffing-asn ${ASN_SOURCE_FILES})
 add_dependencies(spiffing-asn gen-ber)
+target_link_libraries(spiffing-asn asn1c::asn1c)
+target_include_directories(spiffing-asn PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/gen-ber ${ASN1C_SKELETON}/asn1c)
 target_link_libraries(spiffing-asn asn1c::asn1c)
 
 set(SOURCE_FILES
