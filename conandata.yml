@@ -4,3 +4,6 @@
 requirements:
   - "asn1c/0.9.28"
   - "flxml/2.1.1"
+
+build-requirements:
+  - "asn1c/0.9.28"
