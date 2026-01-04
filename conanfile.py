@@ -55,5 +55,8 @@ class ConanApplication(ConanFile):
         copy(self, "*.h", src=self.source_folder, dst=self.package_folder, keep_path=True)
 
     def package_info(self):
+        self.cpp_info.names["cmake_find_package"] = "spiffing"
+        self.cpp_info.names["cmake_find_package_multi"] = "spiffing"
+        self.cpp_info.set_property("cmake_target_name", "spiffing::spiffing")
         self.cpp_info.libs = ["spiffing", "spiffing-asn"]
         self.cpp_info.includedirs = ["include"]
