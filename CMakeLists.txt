@@ -97,3 +97,25 @@ target_link_libraries(test-spiffing spiffing spiffing-asn)
 
 add_executable(transpifferizer transpifferizer.cc)
 target_link_libraries(transpifferizer spiffing spiffing-asn)
+
+# Install rules
+include(GNUInstallDirs)
+
+# Install libraries
+install(TARGETS spiffing spiffing-asn
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Install executables
+install(TARGETS spifflicator test-spiffing transpifferizer
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Install public headers
+install(DIRECTORY include/spiffing
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
+
